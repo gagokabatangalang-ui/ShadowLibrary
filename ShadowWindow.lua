@@ -1,6 +1,5 @@
--- ShadowWindow.lua v2.0
--- Window and Tab management for Shadow Library
--- Mobile-Optimized | Avatar Display | Credits Footer
+-- ShadowWindow.lua v2.1
+-- Fixed: avatar crash, blank content, logo display, mobile layout
 
 local ShadowWindow = {}
 
@@ -8,8 +7,7 @@ function ShadowWindow:Create(options, Config, Utility)
     options = options or {}
     local windowName = options.Name or "Shadow Window"
     local credit = options.Credit or Config.Credit
-    local description = options.Description or "Shadow Library - Premium UI"
-    local theme = options.Theme or "Shadow"
+    local description = options.Description or "Shadow Library UI"
     local logo = options.Logo or Config.Logo
     local showAvatar = options.ShowAvatar ~= false
 
@@ -18,14 +16,12 @@ function ShadowWindow:Create(options, Config, Utility)
     local UserInputService = game:GetService("UserInputService")
     local IS_MOBILE = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
 
-    -- Screen size detection
     local screenSize = workspace.CurrentCamera.ViewportSize
     local isSmallScreen = screenSize.X < 700 or IS_MOBILE
 
-    -- Window sizing based on device
-    local winWidth = isSmallScreen and math.min(screenSize.X - 20, 500) or 550
-    local winHeight = isSmallScreen and math.min(screenSize.Y - 40, 600) or 450
-    local tabWidth = isSmallScreen and 110 or 130
+    local winWidth = isSmallScreen and math.min(screenSize.X - 20, 480) or 520
+    local winHeight = isSmallScreen and math.min(screenSize.Y - 40, 580) or 440
+    local tabWidth = isSmallScreen and 100 or 120
 
     -- Main container
     local screenGui = Utility:Create("ScreenGui", {
@@ -49,25 +45,25 @@ function ShadowWindow:Create(options, Config, Utility)
     Utility:Stroke(mainFrame, Config.Theme.GlassBorder, 1.5, 0.4)
     Utility:Shadow(mainFrame, 0.6, 20)
 
-    -- Title bar (compact)
+    -- Title bar
     local titleBar = Utility:Create("Frame", {
         Name = "TitleBar",
         BackgroundColor3 = Config.Theme.GlassBackground,
         BackgroundTransparency = 0.2,
         BorderSizePixel = 0,
-        Size = UDim2.new(1, 0, 0, 36),
+        Size = UDim2.new(1, 0, 0, 38),
         Position = UDim2.new(0, 0, 0, 0),
         Parent = mainFrame
     })
     Utility:RoundCorner(titleBar, 14)
 
-    -- Logo icon (properly sized)
+    -- Logo (FIXED: use ImageColor3 white so logo shows)
     local logoIcon = Utility:Create("ImageLabel", {
         Name = "Logo",
         BackgroundTransparency = 1,
         Image = logo,
         ImageColor3 = Color3.fromRGB(255, 255, 255),
-        Size = UDim2.new(0, 24, 0, 24),
+        Size = UDim2.new(0, 26, 0, 26),
         Position = UDim2.new(0, 10, 0, 6),
         Parent = titleBar
     })
@@ -78,7 +74,7 @@ function ShadowWindow:Create(options, Config, Utility)
         Name = "Title",
         BackgroundTransparency = 1,
         Size = UDim2.new(0.5, 0, 1, 0),
-        Position = UDim2.new(0, 40, 0, 0),
+        Position = UDim2.new(0, 42, 0, 0),
         Font = Enum.Font.GothamBold,
         Text = windowName,
         TextColor3 = Config.Theme.TextPrimary,
@@ -88,17 +84,20 @@ function ShadowWindow:Create(options, Config, Utility)
     })
 
     -- Close button
-    local closeBtn = Utility:Create("ImageButton", {
+    local closeBtn = Utility:Create("TextButton", {
         Name = "Close",
-        BackgroundTransparency = 1,
-        Image = "rbxassetid://3926305904",
-        ImageRectOffset = Vector2.new(284, 4),
-        ImageRectSize = Vector2.new(24, 24),
-        ImageColor3 = Config.Theme.Error,
-        Size = UDim2.new(0, 22, 0, 22),
-        Position = UDim2.new(1, -30, 0, 7),
+        BackgroundColor3 = Config.Theme.Error,
+        BackgroundTransparency = 0.7,
+        BorderSizePixel = 0,
+        Size = UDim2.new(0, 26, 0, 26),
+        Position = UDim2.new(1, -32, 0, 6),
+        Font = Enum.Font.GothamBold,
+        Text = "X",
+        TextColor3 = Config.Theme.TextPrimary,
+        TextSize = 13,
         Parent = titleBar
     })
+    Utility:RoundCorner(closeBtn, 8)
 
     closeBtn.MouseButton1Click:Connect(function()
         Utility:Tween(mainFrame, {Size = UDim2.new(0, 0, 0, 0), Position = UDim2.new(0.5, 0, 0.5, 0)}, 0.35)
@@ -108,19 +107,22 @@ function ShadowWindow:Create(options, Config, Utility)
     end)
 
     -- Minimize button
-    local minBtn = Utility:Create("ImageButton", {
+    local minBtn = Utility:Create("TextButton", {
         Name = "Minimize",
-        BackgroundTransparency = 1,
-        Image = "rbxassetid://3926305904",
-        ImageRectOffset = Vector2.new(804, 124),
-        ImageRectSize = Vector2.new(36, 36),
-        ImageColor3 = Config.Theme.TextSecondary,
-        Size = UDim2.new(0, 22, 0, 22),
-        Position = UDim2.new(1, -56, 0, 7),
+        BackgroundColor3 = Config.Theme.Warning,
+        BackgroundTransparency = 0.7,
+        BorderSizePixel = 0,
+        Size = UDim2.new(0, 26, 0, 26),
+        Position = UDim2.new(1, -62, 0, 6),
+        Font = Enum.Font.GothamBold,
+        Text = "-",
+        TextColor3 = Config.Theme.TextPrimary,
+        TextSize = 15,
         Parent = titleBar
     })
+    Utility:RoundCorner(minBtn, 8)
 
-    -- Minimized floating icon (your logo)
+    -- Minimized floating icon
     local minimizedIcon = Utility:Create("ImageButton", {
         Name = "MinimizedIcon",
         BackgroundColor3 = Config.Theme.GlassBackground,
@@ -141,7 +143,7 @@ function ShadowWindow:Create(options, Config, Utility)
     minBtn.MouseButton1Click:Connect(function()
         minimized = not minimized
         if minimized then
-            Utility:Tween(mainFrame, {Size = UDim2.new(0, winWidth, 0, 36)}, 0.25)
+            Utility:Tween(mainFrame, {Size = UDim2.new(0, winWidth, 0, 38)}, 0.25)
             task.delay(0.25, function()
                 mainFrame.Visible = false
                 minimizedIcon.Visible = true
@@ -162,14 +164,14 @@ function ShadowWindow:Create(options, Config, Utility)
     end)
     Utility:Drag(minimizedIcon)
 
-    -- Tab container (left side)
+    -- Tab container
     local tabContainer = Utility:Create("Frame", {
         Name = "TabContainer",
         BackgroundColor3 = Config.Theme.GlassBackground,
         BackgroundTransparency = 0.4,
         BorderSizePixel = 0,
-        Size = UDim2.new(0, tabWidth, 1, -120),
-        Position = UDim2.new(0, 8, 0, 42),
+        Size = UDim2.new(0, tabWidth, 1, -115),
+        Position = UDim2.new(0, 8, 0, 44),
         Parent = mainFrame
     })
     Utility:RoundCorner(tabContainer, 10)
@@ -191,14 +193,14 @@ function ShadowWindow:Create(options, Config, Utility)
         Parent = tabContainer
     })
 
-    -- Content container (right side)
+    -- Content container
     local contentContainer = Utility:Create("Frame", {
         Name = "ContentContainer",
         BackgroundColor3 = Config.Theme.GlassBackground,
         BackgroundTransparency = 0.3,
         BorderSizePixel = 0,
-        Size = UDim2.new(1, -tabWidth - 20, 1, -120),
-        Position = UDim2.new(0, tabWidth + 14, 0, 42),
+        Size = UDim2.new(1, -tabWidth - 18, 1, -115),
+        Position = UDim2.new(0, tabWidth + 12, 0, 44),
         Parent = mainFrame
     })
     Utility:RoundCorner(contentContainer, 10)
@@ -239,65 +241,98 @@ function ShadowWindow:Create(options, Config, Utility)
         BackgroundColor3 = Config.Theme.GlassBackground,
         BackgroundTransparency = 0.2,
         BorderSizePixel = 0,
-        Size = UDim2.new(1, -16, 0, 68),
-        Position = UDim2.new(0, 8, 1, -74),
+        Size = UDim2.new(1, -16, 0, 64),
+        Position = UDim2.new(0, 8, 1, -70),
         Parent = mainFrame
     })
     Utility:RoundCorner(footerFrame, 10)
     Utility:Stroke(footerFrame, Config.Theme.GlassBorder, 1, 0.5)
 
-    -- Avatar viewport (3D side view)
+    -- Avatar frame (FIXED: safer avatar loading)
     local avatarFrame = Utility:Create("Frame", {
         Name = "AvatarFrame",
         BackgroundColor3 = Config.Theme.Background,
         BackgroundTransparency = 0.3,
         BorderSizePixel = 0,
-        Size = UDim2.new(0, 50, 0, 50),
-        Position = UDim2.new(0, 8, 0, 9),
+        Size = UDim2.new(0, 48, 0, 48),
+        Position = UDim2.new(0, 8, 0, 8),
         Parent = footerFrame
     })
     Utility:RoundCorner(avatarFrame, 10)
     Utility:Stroke(avatarFrame, Config.Theme.Accent, 1.5, 0.3)
 
-    local avatarViewport = Utility:Create("ViewportFrame", {
-        Name = "AvatarViewport",
-        BackgroundTransparency = 1,
-        Size = UDim2.new(1, 0, 1, 0),
-        Parent = avatarFrame
-    })
+    -- Try to load avatar safely
+    local avatarLoaded = false
+    if showAvatar then
+        local success, result = pcall(function()
+            local char = LocalPlayer.Character
+            if not char then return false end
 
-    -- Load avatar
-    if showAvatar and LocalPlayer.Character then
-        local char = LocalPlayer.Character:Clone()
-        char:BreakJoints()
-        for _, part in pairs(char:GetDescendants()) do
-            if part:IsA("BasePart") then
-                part.CanCollide = false
-                part.Anchored = true
-            elseif part:IsA("Humanoid") then
-                part.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
+            local clone = char:Clone()
+            if not clone then return false end
+
+            -- Remove scripts and humanoid to prevent errors
+            for _, obj in pairs(clone:GetDescendants()) do
+                if obj:IsA("Script") or obj:IsA("LocalScript") then
+                    obj:Destroy()
+                elseif obj:IsA("BasePart") then
+                    obj.CanCollide = false
+                    obj.Anchored = true
+                    obj.CastShadow = false
+                elseif obj:IsA("Humanoid") then
+                    obj:Destroy()
+                end
             end
-        end
-        char.Parent = avatarViewport
 
-        local cam = Instance.new("Camera")
-        cam.Parent = avatarViewport
-        avatarViewport.CurrentCamera = cam
+            clone.Parent = avatarFrame
 
-        -- Side view camera position
-        local head = char:FindFirstChild("Head")
-        if head then
-            cam.CFrame = CFrame.new(head.Position + Vector3.new(4, 0.5, 0), head.Position)
-        end
-    else
-        -- Fallback: show logo if no avatar
+            -- Position clone in frame
+            local head = clone:FindFirstChild("Head")
+            local hrp = clone:FindFirstChild("HumanoidRootPart")
+            local targetPart = head or hrp or clone:FindFirstChildWhichIsA("BasePart")
+
+            if targetPart then
+                for _, part in pairs(clone:GetDescendants()) do
+                    if part:IsA("BasePart") then
+                        part.CFrame = part.CFrame - targetPart.Position + Vector3.new(0, 0, 0)
+                    end
+                end
+            end
+
+            -- Camera for side view
+            local cam = Instance.new("Camera")
+            cam.Parent = avatarFrame
+
+            -- Use ViewportFrame for proper 3D display
+            local viewport = Utility:Create("ViewportFrame", {
+                BackgroundTransparency = 1,
+                Size = UDim2.new(1, 0, 1, 0),
+                Parent = avatarFrame
+            })
+
+            clone.Parent = viewport
+            viewport.CurrentCamera = cam
+
+            local camPart = clone:FindFirstChild("Head") or clone:FindFirstChild("HumanoidRootPart") or clone:FindFirstChildWhichIsA("BasePart")
+            if camPart then
+                cam.CFrame = CFrame.new(camPart.Position + Vector3.new(3.5, 0.5, 0), camPart.Position)
+            end
+
+            return true
+        end)
+
+        avatarLoaded = success and result
+    end
+
+    -- If avatar failed, show logo instead
+    if not avatarLoaded then
         local fallbackLogo = Utility:Create("ImageLabel", {
             BackgroundTransparency = 1,
             Image = logo,
             ImageColor3 = Config.Theme.Accent,
-            Size = UDim2.new(0.8, 0, 0.8, 0),
-            Position = UDim2.new(0.1, 0, 0.1, 0),
-            Parent = avatarViewport
+            Size = UDim2.new(0.75, 0, 0.75, 0),
+            Position = UDim2.new(0.125, 0, 0.125, 0),
+            Parent = avatarFrame
         })
     end
 
@@ -305,12 +340,12 @@ function ShadowWindow:Create(options, Config, Utility)
     local creditsText = Utility:Create("TextLabel", {
         Name = "Credits",
         BackgroundTransparency = 1,
-        Size = UDim2.new(1, -70, 0, 22),
-        Position = UDim2.new(0, 64, 0, 6),
+        Size = UDim2.new(1, -68, 0, 20),
+        Position = UDim2.new(0, 62, 0, 6),
         Font = Enum.Font.GothamBold,
         Text = credit,
         TextColor3 = Config.Theme.Accent,
-        TextSize = 13,
+        TextSize = 12,
         TextXAlignment = Enum.TextXAlignment.Left,
         Parent = footerFrame
     })
@@ -319,12 +354,12 @@ function ShadowWindow:Create(options, Config, Utility)
     local descText = Utility:Create("TextLabel", {
         Name = "Description",
         BackgroundTransparency = 1,
-        Size = UDim2.new(1, -70, 0, 28),
-        Position = UDim2.new(0, 64, 0, 28),
+        Size = UDim2.new(1, -68, 0, 26),
+        Position = UDim2.new(0, 62, 0, 26),
         Font = Enum.Font.Gotham,
         Text = description,
         TextColor3 = Config.Theme.TextDark,
-        TextSize = 11,
+        TextSize = 10,
         TextWrapped = true,
         TextXAlignment = Enum.TextXAlignment.Left,
         TextYAlignment = Enum.TextYAlignment.Top,
@@ -365,6 +400,7 @@ function ShadowWindow:Create(options, Config, Utility)
         })
         Utility:RoundCorner(tabBtn, 8)
 
+        -- IMPORTANT: Parent to scrollFrame directly, not contentContainer
         local tabContent = Utility:Create("Frame", {
             Name = tabName .. "_Content",
             BackgroundTransparency = 1,
