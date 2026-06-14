@@ -17,6 +17,9 @@ local CoreGui = game:GetService("CoreGui")
 local LocalPlayer = Players.LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
 
+-- GitHub raw URL base (your repo)
+local GITHUB_BASE = "https://raw.githubusercontent.com/gagokabatangalang-ui/ShadowLibrary/refs/heads/main/"
+
 -- Configuration
 local Config = {
     Name = "Shadow Library",
@@ -195,7 +198,21 @@ function ShadowLibrary:LoadModule(moduleName)
         return self._modules[moduleName]
     end
 
+    -- Load from GitHub via HttpGet
     local success, module = pcall(function()
+        local url = GITHUB_BASE .. moduleName .. ".lua"
+        local source = game:HttpGet(url, true)
+        local func = loadstring(source)
+        return func()
+    end)
+
+    if success and module then
+        self._modules[moduleName] = module
+        return module
+    end
+
+    -- Fallback: try local require
+    success, module = pcall(function()
         return require(script:FindFirstChild(moduleName) or script.Parent:FindFirstChild(moduleName))
     end)
 
