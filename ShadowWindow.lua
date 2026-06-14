@@ -1,5 +1,5 @@
--- ShadowWindow.lua v2.1
--- Fixed: avatar crash, blank content, logo display, mobile layout
+-- ShadowWindow.lua v2.2
+-- Fixed: Avatar uses Roblox thumbnail API instead of 3D cloning
 
 local ShadowWindow = {}
 
@@ -23,7 +23,6 @@ function ShadowWindow:Create(options, Config, Utility)
     local winHeight = isSmallScreen and math.min(screenSize.Y - 40, 580) or 440
     local tabWidth = isSmallScreen and 100 or 120
 
-    -- Main container
     local screenGui = Utility:Create("ScreenGui", {
         Name = "ShadowWindow_" .. windowName,
         Parent = game:GetService("CoreGui"),
@@ -31,7 +30,6 @@ function ShadowWindow:Create(options, Config, Utility)
         ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     })
 
-    -- Main frame
     local mainFrame = Utility:Create("Frame", {
         Name = "MainFrame",
         BackgroundColor3 = Config.Theme.Background,
@@ -57,7 +55,7 @@ function ShadowWindow:Create(options, Config, Utility)
     })
     Utility:RoundCorner(titleBar, 14)
 
-    -- Logo (FIXED: use ImageColor3 white so logo shows)
+    -- Logo
     local logoIcon = Utility:Create("ImageLabel", {
         Name = "Logo",
         BackgroundTransparency = 1,
@@ -69,7 +67,6 @@ function ShadowWindow:Create(options, Config, Utility)
     })
     Utility:RoundCorner(logoIcon, 6)
 
-    -- Title text
     local titleText = Utility:Create("TextLabel", {
         Name = "Title",
         BackgroundTransparency = 1,
@@ -83,7 +80,6 @@ function ShadowWindow:Create(options, Config, Utility)
         Parent = titleBar
     })
 
-    -- Close button
     local closeBtn = Utility:Create("TextButton", {
         Name = "Close",
         BackgroundColor3 = Config.Theme.Error,
@@ -106,7 +102,6 @@ function ShadowWindow:Create(options, Config, Utility)
         end)
     end)
 
-    -- Minimize button
     local minBtn = Utility:Create("TextButton", {
         Name = "Minimize",
         BackgroundColor3 = Config.Theme.Warning,
@@ -122,7 +117,6 @@ function ShadowWindow:Create(options, Config, Utility)
     })
     Utility:RoundCorner(minBtn, 8)
 
-    -- Minimized floating icon
     local minimizedIcon = Utility:Create("ImageButton", {
         Name = "MinimizedIcon",
         BackgroundColor3 = Config.Theme.GlassBackground,
@@ -235,7 +229,7 @@ function ShadowWindow:Create(options, Config, Utility)
         Parent = scrollFrame
     })
 
-    -- BOTTOM FOOTER (Avatar + Credits + Description)
+    -- BOTTOM FOOTER
     local footerFrame = Utility:Create("Frame", {
         Name = "Footer",
         BackgroundColor3 = Config.Theme.GlassBackground,
@@ -248,7 +242,7 @@ function ShadowWindow:Create(options, Config, Utility)
     Utility:RoundCorner(footerFrame, 10)
     Utility:Stroke(footerFrame, Config.Theme.GlassBorder, 1, 0.5)
 
-    -- Avatar frame (FIXED: safer avatar loading)
+    -- Avatar using Roblox thumbnail API (RELIABLE)
     local avatarFrame = Utility:Create("Frame", {
         Name = "AvatarFrame",
         BackgroundColor3 = Config.Theme.Background,
@@ -261,82 +255,31 @@ function ShadowWindow:Create(options, Config, Utility)
     Utility:RoundCorner(avatarFrame, 10)
     Utility:Stroke(avatarFrame, Config.Theme.Accent, 1.5, 0.3)
 
-    -- Try to load avatar safely
-    local avatarLoaded = false
-    if showAvatar then
-        local success, result = pcall(function()
-            local char = LocalPlayer.Character
-            if not char then return false end
+    -- Use Roblox avatar thumbnail (always works)
+    local avatarImg = Utility:Create("ImageLabel", {
+        Name = "AvatarImage",
+        BackgroundTransparency = 1,
+        Image = "",
+        Size = UDim2.new(1, 0, 1, 0),
+        Parent = avatarFrame
+    })
+    Utility:RoundCorner(avatarImg, 10)
 
-            local clone = char:Clone()
-            if not clone then return false end
-
-            -- Remove scripts and humanoid to prevent errors
-            for _, obj in pairs(clone:GetDescendants()) do
-                if obj:IsA("Script") or obj:IsA("LocalScript") then
-                    obj:Destroy()
-                elseif obj:IsA("BasePart") then
-                    obj.CanCollide = false
-                    obj.Anchored = true
-                    obj.CastShadow = false
-                elseif obj:IsA("Humanoid") then
-                    obj:Destroy()
-                end
-            end
-
-            clone.Parent = avatarFrame
-
-            -- Position clone in frame
-            local head = clone:FindFirstChild("Head")
-            local hrp = clone:FindFirstChild("HumanoidRootPart")
-            local targetPart = head or hrp or clone:FindFirstChildWhichIsA("BasePart")
-
-            if targetPart then
-                for _, part in pairs(clone:GetDescendants()) do
-                    if part:IsA("BasePart") then
-                        part.CFrame = part.CFrame - targetPart.Position + Vector3.new(0, 0, 0)
-                    end
-                end
-            end
-
-            -- Camera for side view
-            local cam = Instance.new("Camera")
-            cam.Parent = avatarFrame
-
-            -- Use ViewportFrame for proper 3D display
-            local viewport = Utility:Create("ViewportFrame", {
-                BackgroundTransparency = 1,
-                Size = UDim2.new(1, 0, 1, 0),
-                Parent = avatarFrame
-            })
-
-            clone.Parent = viewport
-            viewport.CurrentCamera = cam
-
-            local camPart = clone:FindFirstChild("Head") or clone:FindFirstChild("HumanoidRootPart") or clone:FindFirstChildWhichIsA("BasePart")
-            if camPart then
-                cam.CFrame = CFrame.new(camPart.Position + Vector3.new(3.5, 0.5, 0), camPart.Position)
-            end
-
-            return true
+    -- Load avatar image asynchronously
+    task.spawn(function()
+        local success, thumb = pcall(function()
+            return Players:GetUserThumbnailAsync(LocalPlayer.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size150x150)
         end)
+        if success and thumb then
+            avatarImg.Image = thumb
+        else
+            -- Fallback to logo
+            avatarImg.Image = logo
+            avatarImg.ImageColor3 = Config.Theme.Accent
+        end
+    end)
 
-        avatarLoaded = success and result
-    end
-
-    -- If avatar failed, show logo instead
-    if not avatarLoaded then
-        local fallbackLogo = Utility:Create("ImageLabel", {
-            BackgroundTransparency = 1,
-            Image = logo,
-            ImageColor3 = Config.Theme.Accent,
-            Size = UDim2.new(0.75, 0, 0.75, 0),
-            Position = UDim2.new(0.125, 0, 0.125, 0),
-            Parent = avatarFrame
-        })
-    end
-
-    -- Credits text
+    -- Credits
     local creditsText = Utility:Create("TextLabel", {
         Name = "Credits",
         BackgroundTransparency = 1,
@@ -350,7 +293,6 @@ function ShadowWindow:Create(options, Config, Utility)
         Parent = footerFrame
     })
 
-    -- Description text
     local descText = Utility:Create("TextLabel", {
         Name = "Description",
         BackgroundTransparency = 1,
@@ -366,7 +308,6 @@ function ShadowWindow:Create(options, Config, Utility)
         Parent = footerFrame
     })
 
-    -- Drag functionality
     Utility:Drag(mainFrame, titleBar)
 
     -- Tab management
@@ -400,7 +341,6 @@ function ShadowWindow:Create(options, Config, Utility)
         })
         Utility:RoundCorner(tabBtn, 8)
 
-        -- IMPORTANT: Parent to scrollFrame directly, not contentContainer
         local tabContent = Utility:Create("Frame", {
             Name = tabName .. "_Content",
             BackgroundTransparency = 1,
