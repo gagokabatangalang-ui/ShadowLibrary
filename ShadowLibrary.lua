@@ -1,50 +1,52 @@
--- Shadow Library
+-- Shadow Library v2.0
 -- A Glass Fluent UI Library for Roblox
 -- Created by ShadowDeath23
--- Version: 1.0.0
+-- Mobile-Optimized | Avatar Support | Clean Layout
 
 local ShadowLibrary = {}
 ShadowLibrary.__index = ShadowLibrary
 
--- Services
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local HttpService = game:GetService("HttpService")
 local CoreGui = game:GetService("CoreGui")
+local StarterGui = game:GetService("StarterGui")
 
 local LocalPlayer = Players.LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
 
--- GitHub raw URL base (your repo)
+-- GitHub raw URL base
 local GITHUB_BASE = "https://raw.githubusercontent.com/gagokabatangalang-ui/ShadowLibrary/refs/heads/main/"
+
+-- Mobile detection
+local IS_MOBILE = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
 
 -- Configuration
 local Config = {
     Name = "Shadow Library",
-    Version = "1.0.0",
+    Version = "2.0.0",
     Credit = "Created by ShadowDeath23",
     Logo = "rbxassetid://115418924219428",
     Theme = {
-        Background = Color3.fromRGB(15, 15, 20),
-        BackgroundTransparent = Color3.fromRGB(15, 15, 20),
-        GlassBackground = Color3.fromRGB(25, 25, 35),
-        GlassBorder = Color3.fromRGB(40, 40, 55),
-        Accent = Color3.fromRGB(120, 80, 200),
-        AccentLight = Color3.fromRGB(150, 110, 230),
-        TextPrimary = Color3.fromRGB(240, 240, 245),
-        TextSecondary = Color3.fromRGB(160, 160, 170),
-        TextDark = Color3.fromRGB(100, 100, 110),
-        Success = Color3.fromRGB(80, 200, 120),
-        Error = Color3.fromRGB(200, 80, 80),
-        Warning = Color3.fromRGB(230, 180, 60),
+        Background = Color3.fromRGB(12, 12, 18),
+        GlassBackground = Color3.fromRGB(22, 22, 32),
+        GlassBorder = Color3.fromRGB(45, 45, 60),
+        Accent = Color3.fromRGB(130, 90, 220),
+        AccentLight = Color3.fromRGB(160, 120, 250),
+        TextPrimary = Color3.fromRGB(245, 245, 250),
+        TextSecondary = Color3.fromRGB(170, 170, 180),
+        TextDark = Color3.fromRGB(110, 110, 120),
+        Success = Color3.fromRGB(85, 210, 130),
+        Error = Color3.fromRGB(210, 85, 85),
+        Warning = Color3.fromRGB(235, 190, 70),
         Shadow = Color3.fromRGB(0, 0, 0),
-        GlassTransparency = 0.15,
-        BorderTransparency = 0.6,
-        AnimationSpeed = 0.3,
-        SpringDamping = 0.7,
-        SpringFrequency = 1.2
+        GlassTransparency = 0.08,
+        BorderTransparency = 0.5,
+        AnimationSpeed = 0.25,
+        SpringDamping = 0.65,
+        SpringFrequency = 1.0
     }
 }
 
@@ -63,7 +65,6 @@ function Utility:Tween(instance, properties, duration, easingStyle, easingDirect
     duration = duration or Config.Theme.AnimationSpeed
     easingStyle = easingStyle or Enum.EasingStyle.Quart
     easingDirection = easingDirection or Enum.EasingDirection.Out
-
     local tween = TweenService:Create(instance, TweenInfo.new(duration, easingStyle, easingDirection), properties)
     tween:Play()
     return tween
@@ -72,7 +73,6 @@ end
 function Utility:SpringTween(instance, properties, damping, frequency)
     damping = damping or Config.Theme.SpringDamping
     frequency = frequency or Config.Theme.SpringFrequency
-
     local tween = TweenService:Create(instance, TweenInfo.new(1, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out, 0, false, damping / frequency), properties)
     tween:Play()
     return tween
@@ -91,11 +91,11 @@ function Utility:Shadow(instance, transparency, size)
     shadow.BackgroundTransparency = 1
     shadow.Image = "rbxassetid://131604521937076"
     shadow.ImageColor3 = Config.Theme.Shadow
-    shadow.ImageTransparency = transparency or 0.6
+    shadow.ImageTransparency = transparency or 0.7
     shadow.ScaleType = Enum.ScaleType.Slice
     shadow.SliceCenter = Rect.new(10, 10, 118, 118)
-    shadow.Size = UDim2.new(1, size or 20, 1, size or 20)
-    shadow.Position = UDim2.new(0, -(size or 20)/2, 0, -(size or 20)/2)
+    shadow.Size = UDim2.new(1, size or 16, 1, size or 16)
+    shadow.Position = UDim2.new(0, -(size or 16)/2, 0, -(size or 16)/2)
     shadow.ZIndex = instance.ZIndex - 1
     shadow.Parent = instance
     return shadow
@@ -122,42 +122,24 @@ function Utility:Gradient(instance, color1, color2, rotation)
     return gradient
 end
 
-function Utility:GlassEffect(instance, transparency)
-    local glass = Instance.new("Frame")
-    glass.Name = "Glass"
-    glass.BackgroundColor3 = Config.Theme.GlassBackground
-    glass.BackgroundTransparency = transparency or Config.Theme.GlassTransparency
-    glass.BorderSizePixel = 0
-    glass.Size = UDim2.new(1, 0, 1, 0)
-    glass.ZIndex = instance.ZIndex + 1
-    glass.Parent = instance
-    Utility:RoundCorner(glass, 8)
-    return glass
-end
-
 function Utility:Ripple(button, x, y)
     local ripple = Instance.new("Frame")
     ripple.Name = "Ripple"
     ripple.BackgroundColor3 = Config.Theme.TextPrimary
-    ripple.BackgroundTransparency = 0.8
+    ripple.BackgroundTransparency = 0.85
     ripple.BorderSizePixel = 0
     ripple.Size = UDim2.new(0, 0, 0, 0)
     ripple.Position = UDim2.new(0, x, 0, y)
     ripple.ZIndex = button.ZIndex + 10
     Utility:RoundCorner(ripple, 999)
     ripple.Parent = button
-
-    local maxSize = math.max(button.AbsoluteSize.X, button.AbsoluteSize.Y) * 2
-
+    local maxSize = math.max(button.AbsoluteSize.X, button.AbsoluteSize.Y) * 2.5
     Utility:Tween(ripple, {
         Size = UDim2.new(0, maxSize, 0, maxSize),
         Position = UDim2.new(0, x - maxSize/2, 0, y - maxSize/2),
         BackgroundTransparency = 1
-    }, 0.6)
-
-    task.delay(0.6, function()
-        ripple:Destroy()
-    end)
+    }, 0.5)
+    task.delay(0.5, function() ripple:Destroy() end)
 end
 
 function Utility:Drag(frame, handle)
@@ -165,7 +147,6 @@ function Utility:Drag(frame, handle)
     local dragging = false
     local dragStart = nil
     local startPos = nil
-
     handle.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             dragging = true
@@ -173,14 +154,12 @@ function Utility:Drag(frame, handle)
             startPos = frame.Position
         end
     end)
-
     UserInputService.InputChanged:Connect(function(input)
         if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
             local delta = input.Position - dragStart
             frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
         end
     end)
-
     UserInputService.InputEnded:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             dragging = false
@@ -197,30 +176,22 @@ function ShadowLibrary:LoadModule(moduleName)
     if self._modules[moduleName] then
         return self._modules[moduleName]
     end
-
-    -- Load from GitHub via HttpGet
     local success, module = pcall(function()
         local url = GITHUB_BASE .. moduleName .. ".lua"
         local source = game:HttpGet(url, true)
-        local func = loadstring(source)
-        return func()
+        return loadstring(source)()
     end)
-
     if success and module then
         self._modules[moduleName] = module
         return module
     end
-
-    -- Fallback: try local require
     success, module = pcall(function()
         return require(script:FindFirstChild(moduleName) or script.Parent:FindFirstChild(moduleName))
     end)
-
     if success and module then
         self._modules[moduleName] = module
         return module
     end
-
     warn("[Shadow Library] Failed to load module: " .. moduleName)
     return nil
 end
@@ -259,7 +230,6 @@ function ShadowLibrary:Init()
         ResetOnSpawn = false,
         ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     })
-
     self.ScreenGui = screenGui
     return self
 end
